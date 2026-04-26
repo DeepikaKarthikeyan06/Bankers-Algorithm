@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Banker's Algorithm Simulator</title>
+<style>
+    body {
+        font-family: Arial;
+        background: #f4f6f9;
+        text-align: center;
+        padding: 20px;
+    }
+    input {
+        margin: 5px;
+        padding: 5px;
+    }
+    button {
+        padding: 10px;
+        margin-top: 10px;
+        background: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+    table {
+        margin: auto;
+        margin-top: 10px;
+    }
+</style>
+</head>
+<body>
+
+<h2>Banker's Algorithm Simulator</h2>
+
+<label>Processes:</label>
+<input type="number" id="processes" value="3"><br>
+
+<label>Resources:</label>
+<input type="number" id="resources" value="3"><br>
+
+<button onclick="generateInputs()">Generate Matrices</button>
+
+<div id="inputs"></div>
+
+<button onclick="runBanker()">Run Algorithm</button>
+
+<h3 id="result"></h3>
+
+<script>
+let alloc = [], max = [], avail = [];
+
+function generateInputs() {
+    let n = document.getElementById("processes").value;
+    let m = document.getElementById("resources").value;
+
+    let html = "<h3>Allocation Matrix</h3>";
+    for (let i = 0; i < n; i++) {
+        for (let j = 0; j < m; j++) {
+            html += `<input id="alloc_${i}_${j}" type="number" value="0">`;
+        }
+        html += "<br>";
+    }
+
+    html += "<h3>Max Matrix</h3>";
+    for (let i = 0; i < n; i++) {
+        for (let j = 0; j < m; j++) {
+            html += `<input id="max_${i}_${j}" type="number" value="0">`;
+        }
+        html += "<br>";
+    }
+
+    html += "<h3>Available Resources</h3>";
+    for (let j = 0; j < m; j++) {
+        html += `<input id="avail_${j}" type="number" value="0">`;
+    }
+
+    document.getElementById("inputs").innerHTML = html;
+}
+
+function runBanker() {
+    let n = document.getElementById("processes").value;
+    let m = document.getElementById("resources").value;
+
+    alloc = [];
+    max = [];
+    avail = [];
+
+    for (let i = 0; i < n; i++) {
+        alloc[i] = [];
+        max[i] = [];
+        for (let j = 0; j < m; j++) {
+            alloc[i][j] = parseInt(document.getElementById(`alloc_${i}_${j}`).value);
+            max[i][j] = parseInt(document.getElementById(`max_${i}_${j}`).value);
+        }
+    }
+
+    for (let j = 0; j < m; j++) {
+        avail[j] = parseInt(document.getElementById(`avail_${j}`).value);
+    }
+
+    let need = [];
+    for (let i = 0; i < n; i++) {
+        need[i] = [];
+        for (let j = 0; j < m; j++) {
+            need[i][j] = max[i][j] - alloc[i][j];
+        }
+    }
+
+    let finish = Array(n).fill(false);
+    let safeSeq = [];
+    let count = 0;
+
+    while (count < n) {
+        let found = false;
+
+        for (let i = 0; i < n; i++) {
+            if (!finish[i]) {
+                let canRun = true;
+                for (let j = 0; j < m; j++) {
+                    if (need[i][j] > avail[j]) {
+                        canRun = false;
+                        break;
+                    }
+                }
+
+                if (canRun) {
+                    for (let j = 0; j < m; j++) {
+                        avail[j] += alloc[i][j];
+                    }
+                    safeSeq.push("P" + i);
+                    finish[i] = true;
+                    count++;
+                    found = true;
+                }
+            }
+        }
+
+        if (!found) {
+            document.getElementById("result").innerText = "System is NOT in Safe State";
+            return;
+        }
+    }
+
+    document.getElementById("result").innerText =
+        "SAFE State\nSequence: " + safeSeq.join(" → ");
+}
+</script>
+
+</body>
+</html>
